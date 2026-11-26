@@ -714,6 +714,30 @@ msgstr "movimentação de estoque"
 msgid "stock movements"
 msgstr "movimentações de estoque"
 
+msgid "Category"
+msgstr "Categoria"
+
+msgid "Have"
+msgstr "Tenho"
+
+msgid "Minimum"
+msgstr "Mínimo"
+
+msgid "Buy"
+msgstr "Comprar"
+
+msgid "Estimate"
+msgstr "Estimativa"
+
+msgid "Shopping list"
+msgstr "Lista de compras"
+
+msgid "l, F j, Y"
+msgstr "l, j \\d\\e F \\d\\e Y"
+
+msgid "Estimated total"
+msgstr "Total estimado"
+
 msgid "The manufacture date cannot be in the future."
 msgstr "A data de fabricação não pode estar no futuro."
 
@@ -846,9 +870,6 @@ msgstr "Local atualizado."
 msgid "Location deleted."
 msgstr "Local excluído."
 
-msgid "Category"
-msgstr "Categoria"
-
 msgid "Unit"
 msgstr "Unidade"
 
@@ -904,6 +925,12 @@ msgstr "item do kit"
 
 msgid "kit items"
 msgstr "itens do kit"
+
+msgid "In the kit"
+msgstr "No kit"
+
+msgid "Required"
+msgstr "Necessário"
 
 #, python-format
 msgid "Location \"%(name)s\" already belongs to another kit."
@@ -1161,6 +1188,9 @@ msgstr ""
 msgid "Details"
 msgstr "Detalhes"
 
+msgid "Skip to main content"
+msgstr "Pular para o conteúdo"
+
 msgid "Preparedness inventory"
 msgstr "Inventário de preparo"
 
@@ -1310,12 +1340,6 @@ msgstr[1] "%(n)s itens estão abaixo do mínimo."
 
 msgid "Everything is in order."
 msgstr "Tudo em ordem."
-
-msgid "l, F j, Y"
-msgstr "l, j \\d\\e F \\d\\e Y"
-
-msgid "Shopping list"
-msgstr "Lista de compras"
 
 msgid "Insights"
 msgstr "Análises"
@@ -1502,9 +1526,6 @@ msgstr "Nenhuma movimentação ainda."
 msgid "Stock"
 msgstr "Estoque"
 
-msgid "Minimum"
-msgstr "Mínimo"
-
 msgid "Next expiry"
 msgstr "Próx. validade"
 
@@ -1589,20 +1610,8 @@ msgstr "Movimentações recentes"
 msgid "Everything below its minimum stock, with the amount to buy."
 msgstr "Tudo o que está abaixo do estoque mínimo, com a quantidade a comprar."
 
-msgid "Print"
-msgstr "Imprimir"
-
-msgid "Have"
-msgstr "Tenho"
-
-msgid "Buy"
-msgstr "Comprar"
-
-msgid "Estimate"
-msgstr "Estimativa"
-
-msgid "Estimated total"
-msgstr "Total estimado"
+msgid "Download PDF"
+msgstr "Baixar PDF"
 
 #, python-format
 msgid "%(n)s item without a known price"
@@ -1713,12 +1722,6 @@ msgstr "Progresso"
 msgid "Checklist"
 msgstr "Checklist"
 
-msgid "In the kit"
-msgstr "No kit"
-
-msgid "Required"
-msgstr "Necessário"
-
 msgid "OK"
 msgstr "OK"
 
@@ -1777,6 +1780,9 @@ msgstr "Nenhum medicamento ainda."
 
 msgid "Strength"
 msgstr "Concentração"
+
+msgid "Fix these fields:"
+msgstr "Corrija estes campos:"
 
 msgid "Overview"
 msgstr "Visão geral"
