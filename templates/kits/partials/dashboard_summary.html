@@ -17,7 +17,7 @@
           {% elif status.lines %}<span class="badge badge-amber">{% trans 'Incomplete' %}</span>
           {% else %}<span class="badge badge-gray">{% trans 'Empty list' %}</span>{% endif %}
         </div>
-        <div class="track mt-2">
+        <div aria-hidden="true" class="track mt-2">
           <div class="h-full rounded-full {% if status.ready %}bg-emerald-500{% else %}bg-amber-500{% endif %}" style="width: {{ status.percent }}%"></div>
         </div>
         <p class="mt-1.5 text-sm text-stone-500 dark:text-stone-400">
