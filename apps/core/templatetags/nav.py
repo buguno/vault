@@ -1,4 +1,5 @@
 from django import template
+from django.utils.safestring import mark_safe
 
 register = template.Library()
 
@@ -12,8 +13,20 @@ IDLE = (
 )
 
 
+def _is_active(context, prefix) -> bool:
+    path = context['request'].path
+
+    return path == '/' if prefix == '/' else path.startswith(prefix)
+
+
 @register.simple_tag(takes_context=True)
 def nav_class(context, prefix):
-    path = context['request'].path
-    active = path == '/' if prefix == '/' else path.startswith(prefix)
-    return ACTIVE if active else IDLE
+    return ACTIVE if _is_active(context, prefix) else IDLE
+
+
+@register.simple_tag(takes_context=True)
+def nav_current(context, prefix):
+    """`aria-current` for the active link, so it is not told by color alone."""
+    return (
+        mark_safe('aria-current="page"') if _is_active(context, prefix) else ''
+    )
