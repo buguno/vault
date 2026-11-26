@@ -10,7 +10,7 @@
       {% blocktrans count n=expiring_count %}{{ n }} batch expires within {{ warning_days }} days{% plural %}{{ n }} batches expire within {{ warning_days }} days{% endblocktrans %},
       {% blocktrans count n=low_stock_count %}{{ n }} item is below its minimum.{% plural %}{{ n }} items are below their minimum.{% endblocktrans %}
       {% else %}{% trans 'Everything is in order.' %}{% endif %}
-      <span class="text-stone-400 dark:text-stone-500">· {% trans 'l, F j, Y' as long_date %}{{ today|date:long_date }}</span>
+      <span class="text-stone-500 dark:text-stone-400">· {% trans 'l, F j, Y' as long_date %}{{ today|date:long_date }}</span>
     </p>
   </div>
   <div class="flex gap-2">
@@ -84,7 +84,7 @@
           <a href="{{ item.get_absolute_url }}" class="block truncate font-medium hover:underline">{{ item.name }}</a>
           <p class="shrink-0 text-sm tabular-nums text-stone-500 dark:text-stone-400">{{ item.total|floatformat:"-3" }} / {{ item.min_stock|floatformat:"-3" }} {{ item.unit_symbol }}</p>
         </div>
-        <div class="track mt-2">
+        <div aria-hidden="true" class="track mt-2">
           {% widthratio item.total item.min_stock 100 as percent %}
           <div class="h-full rounded-full bg-red-500" style="width: {{ percent }}%"></div>
         </div>
@@ -113,7 +113,7 @@
     <li class="grid grid-cols-[minmax(0,9rem)_1fr_auto] items-center gap-4 px-4 py-3 text-sm sm:grid-cols-[minmax(0,12rem)_1fr_auto]">
       <span class="truncate font-medium">{{ category.name }}</span>
       {% widthratio category.item_count biggest_category 100 as percent %}
-      <div class="track"><div class="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400" style="width: {{ percent }}%"></div></div>
+      <div aria-hidden="true" class="track"><div class="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400" style="width: {{ percent }}%"></div></div>
       <span class="text-right tabular-nums text-stone-500 dark:text-stone-400">{% blocktrans count n=category.item_count %}{{ n }} item{% plural %}{{ n }} items{% endblocktrans %} · {% blocktrans count n=category.batch_count %}{{ n }} batch{% plural %}{{ n }} batches{% endblocktrans %}</span>
     </li>
     {% endfor %}
