@@ -5,6 +5,7 @@
       "release-type": "python",
       "package-name": "vault",
       "include-v-in-tag": true,
+      "include-component-in-tag": false,
       "changelog-path": "CHANGELOG.md",
       "changelog-sections": [
         { "type": "feat", "section": "Features" },

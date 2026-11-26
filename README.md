@@ -696,6 +696,8 @@ One setting is needed once: *Settings, Actions, General, Workflow permissions*, 
 - **Changes only arrive through a pull request** (no review is required, since the project has one maintainer).
 - **A pull request can only be merged after the check `tests / 🧪 Lint and tests` passes** (lint, Tailwind freshness and the test suite).
 
+The repository also has *Automatically delete head branches* turned on (*Settings, General, Pull Requests*): when a pull request is merged, its branch is deleted. That never touches `master`, and the release pull request branch is recreated by release-please when needed.
+
 The release pull request is opened with the built-in token, which GitHub does not test, so `release.yaml` runs `pull-request.yaml` on its branch by hand; that reports the same check. If the check ever has to be renamed (the job name in `tests.yaml` or the caller job in `pull-request.yaml`), update the ruleset too, or every merge stays blocked waiting for it.
 
 ---
