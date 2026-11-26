@@ -688,7 +688,15 @@ When you merge that pull request, release-please creates the tag `vX.Y.Z` and th
 
 One setting is needed once: *Settings, Actions, General, Workflow permissions*, tick **Allow GitHub Actions to create and approve pull requests** (or `gh api -X PUT repos/<owner>/<repo>/actions/permissions/workflow -f default_workflow_permissions=read -F can_approve_pull_request_reviews=true`). Because the release pull request is opened with the built-in token, GitHub does not run the pull-request tests on it; it only changes the version and the changelog. To force a version, put `Release-As: 2.0.0` in a commit body.
 
-To require the tests before a merge, add a branch protection rule on `master` that requires the status check **`tests / 🧪 Lint and tests`**.
+### Branch protection
+
+`master` is protected by a repository ruleset (*Settings, Rules, Rulesets, master protection*) that nobody can bypass:
+
+- **It cannot be deleted** and its history cannot be rewritten (no force push).
+- **Changes only arrive through a pull request** (no review is required, since the project has one maintainer).
+- **A pull request can only be merged after the check `tests / 🧪 Lint and tests` passes** (lint, Tailwind freshness and the test suite).
+
+The release pull request is opened with the built-in token, which GitHub does not test, so `release.yaml` runs `pull-request.yaml` on its branch by hand; that reports the same check. If the check ever has to be renamed (the job name in `tests.yaml` or the caller job in `pull-request.yaml`), update the ruleset too, or every merge stays blocked waiting for it.
 
 ---
 
