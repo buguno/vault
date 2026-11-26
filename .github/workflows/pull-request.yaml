@@ -1,12 +1,17 @@
 name: Pull request
 
 # Pull requests are only tested: nothing is built or published from here.
+#
+# It can also be run by hand on a branch (release.yaml does this for the release
+# pull request, which GitHub does not test by itself): the check it reports is
+# the same one that master requires before a merge.
 on:
   pull_request:
     branches: [master]
+  workflow_dispatch:
 
 concurrency:
-  group: pull-request-${{ github.event.pull_request.number }}
+  group: pull-request-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 permissions:
