@@ -64,7 +64,8 @@ Dev-only dependencies live in the Poetry `dev` group and are not needed to run t
 .
 ├── .github/
 │   ├── dependabot.yml           # weekly pip updates (America/Sao_Paulo)
-│   └── workflows/               # pipeline.yaml (lint + tests + CSS freshness), docker.yaml (image to ghcr.io on v* tags)
+│   └── workflows/               # tests.yaml (reusable: lint + tests + CSS freshness), pull-request.yaml (tests only),
+│                                #   publish.yaml (master and v* tags: tests, then the image to ghcr.io), release.yaml (release-please)
 ├── config/                      # settings.py, urls.py, wsgi.py
 ├── apps/
 │   ├── core/                    # app-agnostic base: TimestampedModel, DomainError, error middleware,
@@ -260,6 +261,21 @@ requirements (`poetry-plugin-export`) and install with pip.
   `_id` attributes (`total: Decimal`, `item_id: int`); `class Meta(TimestampedModel.Meta)`; form fields are retyped with
   `core.forms.field_of(form, name, FieldClass)` instead of mutating `form.fields[...]`; no attributes monkey-patched onto
   model instances (use dataclass rows, template filters or `{% widthratio %}`).
+- **UI/UX and accessibility** (checked against the `ui-ux-pro-max` skill in `.claude/skills/`):
+  - Text contrast >= 4.5:1 in both themes. Muted text is `text-stone-500 dark:text-stone-400` (`stone-500` is darkened in
+    `tailwind/input.css` for this); never `text-stone-400` alone in light mode or `dark:text-stone-500`. Filled buttons
+    use `bg-emerald-700` (white on `emerald-600` is only 3.8:1).
+  - Every page has the skip link and `<main id="main">`; the active menu link carries `aria-current="page"`
+    (`{% nav_current '/prefix/' %}`); table header cells are `<th scope="col">`.
+  - Form fields render through `partials/form_fields.html`: required marker, help text and error ids
+    (`<field id>-help` / `-error`), `aria-invalid` and `aria-describedby` (set by `StyledFormMixin`), and an error summary
+    when more than one field fails. Forms that share a page need distinct `auto_id` (see `ENTRY_IDS` in the inventory
+    views) so ids stay unique.
+  - Touch targets are 44 px on small screens (`min-h-11 sm:min-h-0`, `size-11 sm:size-9`). Decorative bars, rings and
+    heat maps are `aria-hidden` and have their numbers as text next to them.
+  - Motion respects `prefers-reduced-motion`. Forms disable their submit button after sending (`app.js`, htmx forms use
+    `hx-disabled-elt`) so a stock entry is never made twice.
+  - The mobile drawer is `inert` while closed, and the menu button keeps `aria-expanded` in sync.
 - No separator comments like `# --- Section ---`. No `# noqa`: ruff exceptions go in `pyproject.toml` (`PLR2004` is off for
   `tests/**` because tests compare with literal numbers).
 
@@ -273,14 +289,27 @@ requirements (`poetry-plugin-export`) and install with pip.
 - Required env vars: `DATABASE_URL`, `SECRET_KEY`, `ALLOWED_HOSTS`; optional: `ENVIRONMENT` (default `development`), `EXPIRY_WARNING_DAYS` (default `90`), `CURRENCY_SYMBOL` (default `R$`).
 - **Commits**: Conventional Commits, lowercase, gerund verb, e.g.
   `feat(inventory): adding batch model` / `fix(core): fixing alert window calculation`.
-  Use `chore(deps):` / `build(deps):` for dependency changes.
+  Use `chore(deps):` / `build(deps):` for dependency changes. The commit type drives the version (see CI): `feat` = minor,
+  `fix` = patch, `!` or `BREAKING CHANGE:` = major, so pick it on purpose.
 
 ## CI
 
-`.github/workflows/pipeline.yaml` on every push and PR: checkout, Python, Poetry + poe plugin,
-`poetry install`, Tailwind freshness check (`poetry css-check`, binary pinned to v4.3.4), `poetry test`. Use plain literal env values for CI (never production
-credentials). `DATABASE_URL` only needs to be a syntactically valid URL there, since
-Testcontainers provides the real database.
+Workflows in `.github/workflows/`. `tests.yaml` is reusable (`workflow_call`, and `workflow_dispatch` to test any branch by hand without publishing) and holds the one definition of the test job:
+checkout, Python, Poetry + poe plugin, `poetry install`, Tailwind freshness check (`poetry css-check`, binary pinned to v4.3.4),
+`poetry test`. `pull-request.yaml` (PRs into `master`) only calls it: PRs are tested, never built or published.
+`release.yaml` (push to `master`) runs release-please: it keeps the release PR (next version in `pyproject.toml` +
+`CHANGELOG.md`, from the Conventional Commits: feat = minor, fix = patch, `!` = major; config in
+`release-please-config.json`, current version in `.release-please-manifest.json`), and when that PR is merged it tags
+`vX.Y.Z` and starts `publish.yaml` for the tag with `gh workflow run` (a tag made by `GITHUB_TOKEN` does not trigger
+workflows). Never edit the version or the changelog by hand. It needs the Actions setting "Allow GitHub Actions to create
+and approve pull requests". `publish.yaml` (push to `master`, `v*` tags, manual) calls the tests, then job `image` (needs the tests) builds the image,
+smoke-tests it (uid 10001, read-only code, read-only filesystem with an arbitrary uid, gpg backup) and pushes
+`linux/amd64` + `linux/arm64` to `ghcr.io/<owner>/<repo>` (`edge`, `sha-*`, semver, `latest`). Publishing needs the repository
+variable `PUBLISH_IMAGE=true` (without it the image is built and smoke-tested only, with a notice). Tool versions (Python,
+Tailwind) live in the `env:` block of `tests.yaml`. No GitHub `secrets` are used: CI values are throwaway literals, and the
+only credential is the built-in `GITHUB_TOKEN`; add real secrets only to a protected Environment. Keep `DOCKER.md` (the
+registry-style page) in sync with the Dockerfile and the env vars. Use plain literal env values for CI (never production
+credentials). `DATABASE_URL` only needs to be a syntactically valid URL there, since Testcontainers provides the real database.
 
 ## Running it (any machine; notes for the Raspberry Pi)
 
@@ -306,7 +335,8 @@ Testcontainers provides the real database.
   the redirect off. `createsuperuser` still works.
 - Docker: `docker build -t vault .` then `docker run` with `SECRET_KEY`, `ALLOWED_HOSTS`, `DATABASE_URL`
   (PostgreSQL is not in the image). Multi-stage `python:3.14-slim`, runtime deps only, `gnupg`, static files collected
-  at build time, non-root user, TCP health check. `RUN_MIGRATIONS=1` runs `migrate` on start (off by default). The
+  at build time, runs as uid/gid 10001 (system user, no home, no shell), code owned by root and read-only, works with
+  `--read-only --tmpfs /tmp` and any uid, TCP health check. See `DOCKER.md`. `RUN_MIGRATIONS=1` runs `migrate` on start (off by default). The
   first-time setup code appears in `docker logs`.
 - Plain HTTP on the LAN: cookies are not marked `Secure`. Reach it from outside only through a VPN.
 - Backups are made on demand from the Settings page (see Domain rules). Keep the passphrase somewhere safe and copy
