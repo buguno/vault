@@ -5,9 +5,9 @@
 <div class="mb-6 flex flex-wrap items-end justify-between gap-3">
   <div>
     <h1 class="text-2xl font-semibold tracking-tight">{% trans 'Shopping list' %}</h1>
-    <p class="text-sm text-stone-500 dark:text-stone-400">{% trans 'Everything below its minimum stock, with the amount to buy.' %} <span class="hidden print:inline">· {% trans 'l, F j, Y' as long_date %}{{ today|date:long_date }}</span></p>
+    <p class="text-sm text-stone-500 dark:text-stone-400">{% trans 'Everything below its minimum stock, with the amount to buy.' %}</p>
   </div>
-  {% if lines %}<button type="button" data-print class="btn-secondary print:hidden">{% trans 'Print' %}</button>{% endif %}
+  {% if lines %}<a href="{% url 'inventory:shopping_pdf' %}" class="btn-secondary">{% trans 'Download PDF' %}</a>{% endif %}
 </div>
 
 <section class="card overflow-hidden">
@@ -15,12 +15,12 @@
   <table class="w-full text-sm">
     <thead class="text-left text-stone-500 dark:text-stone-400">
       <tr>
-        <th class="px-4 py-2 font-medium">{% trans 'Item' %}</th>
-        <th class="hidden px-4 py-2 font-medium sm:table-cell">{% trans 'Category' %}</th>
-        <th class="px-4 py-2 text-right font-medium">{% trans 'Have' %}</th>
-        <th class="hidden px-4 py-2 text-right font-medium sm:table-cell">{% trans 'Minimum' %}</th>
-        <th class="px-4 py-2 text-right font-medium">{% trans 'Buy' %}</th>
-        <th class="hidden px-4 py-2 text-right font-medium md:table-cell">{% trans 'Estimate' %}</th>
+        <th scope="col" class="px-4 py-2 font-medium">{% trans 'Item' %}</th>
+        <th scope="col" class="hidden px-4 py-2 font-medium sm:table-cell">{% trans 'Category' %}</th>
+        <th scope="col" class="px-4 py-2 text-right font-medium">{% trans 'Have' %}</th>
+        <th scope="col" class="hidden px-4 py-2 text-right font-medium sm:table-cell">{% trans 'Minimum' %}</th>
+        <th scope="col" class="px-4 py-2 text-right font-medium">{% trans 'Buy' %}</th>
+        <th scope="col" class="hidden px-4 py-2 text-right font-medium md:table-cell">{% trans 'Estimate' %}</th>
       </tr>
     </thead>
     <tbody class="divide-y divide-stone-100 dark:divide-white/5">
