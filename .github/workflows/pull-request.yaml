@@ -1,0 +1,17 @@
+name: Pull request
+
+# Pull requests are only tested: nothing is built or published from here.
+on:
+  pull_request:
+    branches: [master]
+
+concurrency:
+  group: pull-request-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    uses: ./.github/workflows/tests.yaml
