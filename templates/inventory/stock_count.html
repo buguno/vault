@@ -24,11 +24,11 @@
     <table class="w-full text-sm">
       <thead class="text-left text-stone-500 dark:text-stone-400">
         <tr>
-          <th class="px-4 py-2 font-medium">{% trans 'Item' %}</th>
-          <th class="hidden px-4 py-2 font-medium sm:table-cell">{% trans 'Lot code' %}</th>
-          <th class="hidden px-4 py-2 font-medium md:table-cell">{% trans 'Expires at' %}</th>
-          <th class="px-4 py-2 text-right font-medium">{% trans 'In the system' %}</th>
-          <th class="w-40 px-4 py-2 font-medium">{% trans 'Counted' %}</th>
+          <th scope="col" class="px-4 py-2 font-medium">{% trans 'Item' %}</th>
+          <th scope="col" class="hidden px-4 py-2 font-medium sm:table-cell">{% trans 'Lot code' %}</th>
+          <th scope="col" class="hidden px-4 py-2 font-medium md:table-cell">{% trans 'Expires at' %}</th>
+          <th scope="col" class="px-4 py-2 text-right font-medium">{% trans 'In the system' %}</th>
+          <th scope="col" class="w-40 px-4 py-2 font-medium">{% trans 'Counted' %}</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-stone-100 dark:divide-white/5">
@@ -36,7 +36,7 @@
         <tr>
           <td class="px-4 py-2.5"><a href="{{ batch.item.get_absolute_url }}" class="font-medium hover:underline">{{ batch.item.name }}</a></td>
           <td class="hidden px-4 py-2.5 text-stone-500 sm:table-cell dark:text-stone-400">{{ batch.lot_code|default:"—" }}</td>
-          <td class="hidden px-4 py-2.5 md:table-cell">{% if batch.expires_at %}{{ batch.expires_at|date:'SHORT_DATE_FORMAT' }}{% else %}<span class="text-stone-400">—</span>{% endif %}</td>
+          <td class="hidden px-4 py-2.5 md:table-cell">{% if batch.expires_at %}{{ batch.expires_at|date:'SHORT_DATE_FORMAT' }}{% else %}<span class="text-stone-500">—</span>{% endif %}</td>
           <td class="px-4 py-2.5 text-right tabular-nums">{{ batch.quantity|floatformat:"-3" }} {{ batch.item.unit_symbol }}</td>
           <td class="px-4 py-2.5"><input type="text" inputmode="decimal" name="count_{{ batch.pk }}" class="input py-1.5 text-right tabular-nums" placeholder="{{ batch.quantity|floatformat:'-3' }}" aria-label="{% trans 'Counted' %}: {{ batch.item.name }}" autocomplete="off"></td>
         </tr>

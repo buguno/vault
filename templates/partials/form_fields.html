@@ -1,15 +1,26 @@
+{% load i18n %}
+{% if form.errors|length > 1 %}
+<div role="alert" class="rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-500/30 dark:bg-red-950 dark:text-red-200">
+  <p class="font-medium">{% trans 'Fix these fields:' %}</p>
+  <ul class="mt-1 list-disc pl-5">
+    {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+    {% for field in form %}{% if field.errors %}<li><a href="#{{ field.id_for_label }}" class="underline">{{ field.label }}</a>: {{ field.errors.0 }}</li>{% endif %}{% endfor %}
+  </ul>
+</div>
+{% else %}
 {% for error in form.non_field_errors %}
-<p class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">{{ error }}</p>
+<p role="alert" class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">{{ error }}</p>
 {% endfor %}
+{% endif %}
 {% for field in form %}
 <div>
   {% if field.widget_type == 'checkbox' %}
   <label for="{{ field.id_for_label }}" class="flex items-center gap-2 text-sm font-medium">{{ field }} {{ field.label }}</label>
   {% else %}
-  <label for="{{ field.id_for_label }}" class="mb-1 block text-sm font-medium">{{ field.label }}</label>
+  <label for="{{ field.id_for_label }}" class="mb-1 block text-sm font-medium">{{ field.label }}{% if field.field.required %}<span aria-hidden="true" class="text-red-700 dark:text-red-400"> *</span>{% endif %}</label>
   {{ field }}
   {% endif %}
-  {% if field.help_text %}<div class="mt-1 text-xs text-stone-500 dark:text-stone-400 [&_ul]:list-disc [&_ul]:pl-4">{{ field.help_text }}</div>{% endif %}
-  {% for error in field.errors %}<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ error }}</p>{% endfor %}
+  {% if field.help_text %}<div id="{{ field.id_for_label }}-help" class="mt-1 text-xs text-stone-500 dark:text-stone-400 [&_ul]:list-disc [&_ul]:pl-4">{{ field.help_text }}</div>{% endif %}
+  {% for error in field.errors %}<p id="{{ field.id_for_label }}-error"{% if form.errors|length == 1 %} role="alert"{% endif %} class="mt-1 text-sm text-red-700 dark:text-red-400">{{ error }}</p>{% endfor %}
 </div>
 {% endfor %}

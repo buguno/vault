@@ -8,7 +8,7 @@ environment variable (e.g. more workers on a bigger server).
 import os
 from pathlib import Path
 
-bind = os.environ.get('GUNICORN_BIND', '0.0.0.0:8000')  # noqa: S104
+bind = os.environ.get('GUNICORN_BIND', '0.0.0.0:8000')
 workers = int(os.environ.get('GUNICORN_WORKERS', '1'))
 threads = int(os.environ.get('GUNICORN_THREADS', '2'))
 worker_class = 'gthread'

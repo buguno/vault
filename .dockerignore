@@ -1,6 +1,7 @@
 # Keep the build context small and never ship secrets or local files.
 .git
 .github
+.claude
 .gitignore
 .env
 .env.*
@@ -16,6 +17,7 @@ bin
 staticfiles
 tests
 tailwind
+docs
 compose.yaml
 Dockerfile
 .dockerignore

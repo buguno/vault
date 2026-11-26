@@ -231,3 +231,8 @@ backup_*.sql
 
 # Tailwind standalone CLI binary (dev only)
 bin/
+
+# Claude Code: the skills are local tools (their licenses are mixed or missing)
+# and settings.local.json is personal, so neither is versioned.
+.claude/skills/
+.claude/settings.local.json

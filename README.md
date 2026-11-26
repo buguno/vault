@@ -49,7 +49,7 @@ Interface languages: **Português (Brasil)** (default) and **English (US)**. Lig
 | **FEFO** | "First expired, first out". Taking stock out always uses the batch that expires first, then the oldest packaged. You can also choose a location to take from. |
 | **Alerts as notifications** | A bell in the menu with a counter, plus a page that lists expired or expiring batches, items below their minimum stock and kits that are incomplete or hold expired items. They clear themselves when you fix the cause. |
 | **Dashboard** | A greeting with a one-line summary, totals, what is expiring, what is below minimum, kits status, autonomy rings and bars per category. |
-| **Shopping list** | Everything below its minimum stock with the amount to buy and a price estimate. Prints cleanly. |
+| **Shopping list** | Everything below its minimum stock with the amount to buy and a price estimate. Downloads as a PDF. |
 | **Insights** | Forecast (how many days each item lasts at its recent pace), stock value per category, and activity (movement mix, who recorded, most used items and a 12-week heat map). |
 | **Stock count** | Count a location's shelves, type the numbers, and only the batches that differ are adjusted and logged. |
 | **CSV import** | Load a first inventory (or a big shopping trip) from a spreadsheet, all or nothing. |
@@ -155,7 +155,7 @@ An entry can carry a **unit cost** (price paid per unit). It is blended into the
 
 ### Shopping list
 
-`/shopping/` lists every item below its minimum stock and how much to buy to reach it. The estimate uses the last known unit cost of each item. Use **Print** for a paper copy (the menu and buttons disappear and the light theme is used).
+`/shopping/` lists every item below its minimum stock and how much to buy to reach it. The estimate uses the last known unit cost of each item. Use **Download PDF** (`/shopping/pdf/`) for a paper copy: an A4 PDF with the table and a box to tick for each item, generated on the server.
 
 ### Insights
 
@@ -196,7 +196,7 @@ An ammunition item has caliber, bullet weight (in grains), bullet type and manuf
 
 A kit owns one location (created from the kit's name unless you pick a free one) and a list of items with required quantities. A line is **complete** when the *usable* (not expired) stock **at that location** reaches the required quantity. A kit is **ready** when every line is complete and nothing in it is expired. Expiring stock is flagged but does not block "ready". To complete a kit, transfer stock into its location.
 
-A kit's location is skipped by automatic exits (see [Taking stock out](#taking-stock-out-fefo)). You can still take from it by choosing it in **Take from**, and the notifications tell you when a kit becomes incomplete. On the kit page, **Print** gives a clean checklist with a box to tick for each line.
+A kit's location is skipped by automatic exits (see [Taking stock out](#taking-stock-out-fefo)). You can still take from it by choosing it in **Take from**, and the notifications tell you when a kit becomes incomplete. On the kit page, **Download PDF** (`/kits/<id>/pdf/`) gives a checklist with a box to tick for each line.
 
 ### Autonomy
 
@@ -366,7 +366,7 @@ Middleware, in order: security, WhiteNoise, sessions, locale, common, CSRF, auth
 
 Pages are rendered on the server. HTMX swaps the stock panel after an entry, exit, adjustment or transfer, and `static/js/app.js` lets validation (422) and rule (409) responses be swapped in. Modals use the native `<dialog>` element. The sidebar drawer, dropdown menu and language selector are a few lines of plain JavaScript.
 
-The look is a floating glass sidebar and top bar over a soft green gradient, in light and dark. The gray scale is overridden in `tailwind/input.css` with a slightly green tint, so every `stone-*` class picks it up. Charts (donuts, bars, the heat map) are plain CSS: no charting library. Printing is handled with Tailwind's `print:` variants, and `app.js` switches to the light theme while printing. Accounts marked read-only get `data-readonly` on `<html>`, and a CSS rule hides POST forms and anything marked `data-write`.
+The look is a floating glass sidebar and top bar over a soft green gradient, in light and dark. The gray scale is overridden in `tailwind/input.css` with a slightly green tint, so every `stone-*` class picks it up. Charts (donuts, bars, the heat map) are plain CSS: no charting library. PDFs (shopping list, kit checklist) are written by `apps/core/pdf.py`, a small writer with no library: standard Helvetica (not embedded, widths in `pdf_metrics.py`), Windows-1252 text, A4 pages that repeat the table header. It costs no extra RAM or dependency, but it only does simple tables. Accounts marked read-only get `data-readonly` on `<html>`, and a CSS rule hides POST forms and anything marked `data-write`.
 
 ---
 
@@ -376,7 +376,7 @@ The look is a floating glass sidebar and top bar over a soft green gradient, in 
 .
 ├── .github/
 │   ├── dependabot.yml           # weekly pip updates (America/Sao_Paulo)
-│   └── workflows/               # pipeline.yaml (CI) and docker.yaml (image to ghcr.io)
+│   └── workflows/               # tests.yaml (reusable), pull-request.yaml, publish.yaml (master and tags), release.yaml
 ├── config/                      # settings.py, urls.py, wsgi.py, asgi.py
 ├── apps/
 │   ├── core/                    # base, profile, settings page, notifications, backup
@@ -590,6 +590,8 @@ poetry prod
 
 ### Docker
 
+> The page you would find on a registry (how to run it, every environment variable, tags, permissions, upgrading) is [DOCKER.md](DOCKER.md).
+
 A `Dockerfile` builds an image that runs the app with gunicorn, so you can run it on any machine that has Docker, Raspberry Pi included. It does **not** include PostgreSQL: point `DATABASE_URL` at a database the container can reach.
 
 You can build the image yourself, or pull the published one from the GitHub Container Registry when the project publishes it (see [Continuous integration](#continuous-integration)): `docker pull ghcr.io/<owner>/vault:latest`. It is built for `linux/amd64` and `linux/arm64` (a 64-bit Raspberry Pi), and it contains no secrets: everything is configured at run time.
@@ -614,7 +616,7 @@ docker logs vault      # the first-time setup code is printed here
 - **Environment file:** do not pass your development `.env` with `--env-file`. Docker keeps the quotes around values literally, so `ENVIRONMENT="development"` becomes the text `"development"` (not development) and `ALLOWED_HOSTS` and `DATABASE_URL` break. Write a separate file without quotes, one `NAME=value` per line, and keep it out of git.
 - **Migrations:** `RUN_MIGRATIONS=1` applies them on every start. It is off by default, so you decide when the schema changes; run them once by hand with `docker run --rm ... vault python manage.py migrate`.
 - **First user:** the setup code is printed to the container's output, so read it with `docker logs vault` (see [First user](#first-user)).
-- **What is inside:** `python:3.14-slim`, only the runtime dependencies (no Poetry, no test tools), `gnupg` for backups, and static files already collected, so nothing has to run before the first start. It runs as a non-root user (uid 1000), and its health check is a TCP connection to port 8000. The image is about 330 MB.
+- **What is inside:** `python:3.14-slim`, only the runtime dependencies (no Poetry, no test tools), `gnupg` for backups, and static files already collected, so nothing has to run before the first start. It runs as an unprivileged user (uid and gid 10001, no home, no shell), the code is owned by root and read-only for that user, and it works with `--read-only --tmpfs /tmp` and with any uid. Its health check is a TCP connection to the app's port. The image is about 330 MB.
 - **State:** the container keeps no data. Everything is in PostgreSQL, so you can recreate the container freely. Backups are downloaded from the Settings page as before.
 - **Configuration:** it is the same environment variables as everywhere else (`ENVIRONMENT` is already `production` in the image), and the `GUNICORN_*` variables work too. Never put real secrets in the image or in a committed file: pass them at run time or through an env file (`--env-file`).
 - **Upgrading:** export a backup, `git pull`, `docker build -t vault .`, then start the new container with `RUN_MIGRATIONS=1`.
@@ -650,10 +652,51 @@ It serves plain HTTP on your LAN, so cookies are not marked `Secure`. Put it beh
 
 ## Continuous integration
 
-`.github/workflows/pipeline.yaml` runs on every push and pull request: checkout, Python 3.14, Poetry and the poe plugin, `poetry install`, the Tailwind freshness check (`poetry css-check`, binary pinned to v4.3.4) and `poetry test`.
-Docker is available on the runner, so Testcontainers provides the database. The environment values there are plain literals (never real credentials); `DATABASE_URL` only needs to be a valid URL because the tests start their own database. Dependabot opens weekly updates for pip.
+Three workflows in `.github/workflows/`; the test steps are written once, in a reusable workflow, and called by the other two.
 
-`.github/workflows/docker.yaml` builds the image for `linux/amd64` and `linux/arm64` and publishes it to **GitHub Container Registry** (`ghcr.io/<owner>/<repo>`) when you push a version tag such as `v1.2.0` (tags `1.2.0`, `1.2` and `latest`), or when you run it by hand from the Actions tab (tag `edge`). It logs in with the built-in `GITHUB_TOKEN`, so no secret needs to be created. New packages start private: change the visibility under the package's settings on GitHub if you want others to pull it without logging in.
+| Workflow | Runs on | What it does |
+| --- | --- | --- |
+| `tests.yaml` | called by the others; also **by hand** on any branch (Actions tab, *Tests*, *Run workflow*) | **Lint and tests:** checkout, Python 3.14, Poetry and the poe plugin, `poetry install`, the Tailwind freshness check (`poetry css-check`, binary pinned to v4.3.4) and `poetry test`. |
+| `pull-request.yaml` | every pull request into `master` | **Only tests.** Nothing is built or published. A new push to the PR cancels the run in progress. |
+| `release.yaml` | push to `master` | Keeps the **release pull request** up to date and, when it is merged, tags the release (see [Releases](#releases)). |
+| `publish.yaml` | push to `master`, version tags `v*`, manual run | Runs the tests again and, **only if they pass**, builds the **container image**, smoke-tests it and publishes it. |
+
+Docker is available on the runner, so Testcontainers provides the database. The environment values there are plain literals (never real credentials); `DATABASE_URL` only needs to be a valid URL because the tests start their own database. Dependabot opens weekly updates for pip, GitHub Actions and the Docker base image.
+
+**The container image** (job `image` of `publish.yaml`): builds the image, runs a smoke test (runs as uid 10001, the code is read-only, it starts with a read-only filesystem and an arbitrary uid, encrypted backups work) and publishes it for `linux/amd64` and `linux/arm64` to **GitHub Container Registry** (`ghcr.io/<owner>/<repo>`).
+
+| Event | Tags published |
+| --- | --- |
+| push to `master` | `edge`, `sha-<commit>` |
+| tag `v1.2.3` | `1.2.3`, `1.2`, `latest`, `sha-<commit>` |
+
+It logs in with the built-in `GITHUB_TOKEN`, so no secret has to be created (and none is used: the only values in the workflows are throwaway ones for the tests). **Publishing is switched by the repository variable `PUBLISH_IMAGE`** (*Settings, Secrets and variables, Actions, Variables*; or `gh variable set PUBLISH_IMAGE --body true`). Without it, for example on a fork, the image is still built and smoke-tested but nothing is pushed, and the run shows a notice saying why. The Python and Tailwind versions used by CI are defined once in the `env:` block at the top of `tests.yaml`. The package is linked to the repository automatically (OCI source label). **The first publish creates a private package**: open the package on GitHub (profile, Packages, `vault`), then *Package settings*, *Change visibility* to Public so anyone can pull it, and check that the repository is listed under *Manage Actions access* with write access. The package page shows this repository's README; [DOCKER.md](DOCKER.md) is the registry-style page and is linked from the image's `documentation` label.
+
+### Releases
+
+Versions are not edited by hand. **release-please** reads the [Conventional Commits](https://www.conventionalcommits.org/) on `master` and keeps one pull request open, *chore(master): release X.Y.Z*, that holds the next version (in `pyproject.toml`) and the `CHANGELOG.md`:
+
+| Commit | Next version | In the changelog |
+| --- | --- | --- |
+| `fix(...)` | patch (1.1.0 → 1.1.1) | Bug fixes |
+| `feat(...)` | minor (1.1.0 → 1.2.0) | Features |
+| `feat(...)!` or a `BREAKING CHANGE:` footer | major (1.1.0 → 2.0.0) | Features, flagged |
+| `refactor`, `perf`, `docs` | none by themselves | listed when a release happens |
+| `build`, `ci`, `chore`, `style`, `test` | none | hidden |
+
+When you merge that pull request, release-please creates the tag `vX.Y.Z` and the GitHub release, and `release.yaml` starts `publish.yaml` for the tag, which publishes `X.Y.Z`, `X.Y` and `latest` (see [DOCKER.md](DOCKER.md)). So a release is: merge pull requests, then merge the release pull request when you want to ship.
+
+One setting is needed once: *Settings, Actions, General, Workflow permissions*, tick **Allow GitHub Actions to create and approve pull requests** (or `gh api -X PUT repos/<owner>/<repo>/actions/permissions/workflow -f default_workflow_permissions=read -F can_approve_pull_request_reviews=true`). Because the release pull request is opened with the built-in token, GitHub does not run the pull-request tests on it; it only changes the version and the changelog. To force a version, put `Release-As: 2.0.0` in a commit body.
+
+### Branch protection
+
+`master` is protected by a repository ruleset (*Settings, Rules, Rulesets, master protection*) that nobody can bypass:
+
+- **It cannot be deleted** and its history cannot be rewritten (no force push).
+- **Changes only arrive through a pull request** (no review is required, since the project has one maintainer).
+- **A pull request can only be merged after the check `tests / 🧪 Lint and tests` passes** (lint, Tailwind freshness and the test suite).
+
+The release pull request is opened with the built-in token, which GitHub does not test, so `release.yaml` runs `pull-request.yaml` on its branch by hand; that reports the same check. If the check ever has to be renamed (the job name in `tests.yaml` or the caller job in `pull-request.yaml`), update the ruleset too, or every merge stays blocked waiting for it.
 
 ---
 

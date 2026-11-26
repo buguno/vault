@@ -3,10 +3,12 @@ from http import HTTPStatus
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils.text import slugify
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 
-from apps.kits import services
+from apps.core.responses import pdf_response
+from apps.kits import reports, services
 from apps.kits.forms import KitForm, KitItemForm
 from apps.kits.models import Kit, KitItem
 
@@ -63,6 +65,13 @@ def _detail_response(request, kit, form=None, status=HTTPStatus.OK):
         'form': form or KitItemForm(),
     }
     return render(request, 'kits/detail.html', context, status=status)
+
+
+def kit_pdf(request, pk):
+    kit = get_object_or_404(Kit.objects.select_related('location'), pk=pk)
+    data = reports.kit_checklist_pdf(services.kit_status(kit))
+
+    return pdf_response(data, f'kit-{slugify(kit.name)}.pdf')
 
 
 def kit_detail(request, pk):

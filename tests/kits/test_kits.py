@@ -505,3 +505,38 @@ def test_a_kit_location_is_skipped_by_automatic_exits(category, kit):
     shelf.refresh_from_db()
     assert in_kit.quantity == Decimal(5)
     assert shelf.quantity == Decimal(1)
+
+
+def test_pdf_downloads_the_checklist(auth_client, kit, category):
+    item = _item(category, 'Gauze')
+    services.set_kit_item(kit, item, Decimal(4))
+    _stock(item, kit.location, 1)
+
+    response = auth_client.get(reverse('kits:pdf', args=[kit.pk]))
+
+    assert response.status_code == HTTPStatus.OK
+    assert response['Content-Type'] == 'application/pdf'
+    assert 'kit-go-bag-1.pdf' in response['Content-Disposition']
+    assert b'Gauze' in response.content
+
+
+def test_pdf_of_a_kit_with_a_description_and_no_items(auth_client, kit):
+    response = auth_client.get(reverse('kits:pdf', args=[kit.pk]))
+
+    assert response.status_code == HTTPStatus.OK
+    assert b'Car trunk' in response.content
+
+
+def test_pdf_of_a_missing_kit_is_not_found(auth_client, db):
+    response = auth_client.get(reverse('kits:pdf', args=[999]))
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+
+
+def test_pdf_of_a_kit_without_a_description(auth_client, db):
+    bare = services.create_kit('Bare kit')
+
+    response = auth_client.get(reverse('kits:pdf', args=[bare.pk]))
+
+    assert response.status_code == HTTPStatus.OK
+    assert b'Bare kit' in response.content

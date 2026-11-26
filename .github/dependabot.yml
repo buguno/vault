@@ -5,3 +5,13 @@ updates:
     schedule:
       interval: "weekly"
       timezone: "America/Sao_Paulo"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      timezone: "America/Sao_Paulo"
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      timezone: "America/Sao_Paulo"

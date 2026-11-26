@@ -1,0 +1,58 @@
+name: Release
+
+# Keeps a "release pull request" open on master: it holds the next version (in
+# pyproject.toml) and the changelog, worked out from the Conventional Commits
+# since the last release (feat = minor, fix = patch, "!" = major). Merging that
+# pull request creates the tag vX.Y.Z and the GitHub release, and this workflow
+# then starts publish.yaml for the tag.
+#
+# Anything created with the built-in GITHUB_TOKEN (the tag, the release pull
+# request) does not trigger other workflows by itself (a GitHub rule, to avoid
+# loops), so publish.yaml and the tests are started explicitly: workflow runs
+# are the one exception to that rule.
+on:
+  push:
+    branches: [master]
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  actions: write
+
+jobs:
+  release-please:
+    name: 🔖 Release pull request
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: 🔖 Update the release pull request, or tag a release
+        id: release
+        uses: googleapis/release-please-action@v4
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+      # The release pull request is opened with the built-in token, and GitHub
+      # does not run pull_request workflows for those. master requires the tests
+      # before a merge, so run them on the release branch by hand.
+      - name: 🧪 Run the tests on the release pull request
+        if: steps.release.outputs.prs_created == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ steps.release.outputs.pr }}
+        run: |
+          branch="$(echo "$PR" | jq -r .headBranchName)"
+          gh workflow run pull-request.yaml --repo "$GITHUB_REPOSITORY" --ref "$branch"
+
+      - name: 🚀 Publish the image for the new tag
+        if: steps.release.outputs.release_created == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release.outputs.tag_name }}
+        run: gh workflow run publish.yaml --repo "$GITHUB_REPOSITORY" --ref "$TAG"

@@ -80,3 +80,34 @@ def test_shopping_list_page_when_nothing_is_missing(auth_client):
 
     assert response.status_code == HTTPStatus.OK
     assert 'Nada para comprar' in response.content.decode()
+
+
+def test_shopping_pdf_downloads_the_list(auth_client, category, location):
+    item = _item(category, 'Rice', 10)
+    services.add_stock(
+        item, location, Decimal(4), EntryDetails(unit_cost=Decimal(2))
+    )
+
+    response = auth_client.get(reverse('inventory:shopping_pdf'))
+
+    assert response.status_code == HTTPStatus.OK
+    assert response['Content-Type'] == 'application/pdf'
+    assert 'shopping-list-' in response['Content-Disposition']
+    assert response.content.startswith(b'%PDF-')
+    assert b'Rice' in response.content
+    assert b'R$ 12,00' in response.content
+
+
+def test_shopping_pdf_when_nothing_is_missing(auth_client):
+    response = auth_client.get(reverse('inventory:shopping_pdf'))
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.content.startswith(b'%PDF-')
+
+
+def test_shopping_page_links_to_the_pdf(auth_client, category):
+    _item(category, 'Rice', 10)
+
+    response = auth_client.get(reverse('inventory:shopping_list'))
+
+    assert reverse('inventory:shopping_pdf') in response.content.decode()

@@ -19,7 +19,8 @@ from django.views.decorators.http import require_POST
 from django.views.generic import CreateView, ListView, UpdateView
 
 from apps.core.htmx import is_htmx
-from apps.inventory import extensions, imports, services
+from apps.core.responses import pdf_response
+from apps.inventory import extensions, imports, reports, services
 from apps.inventory import insights as insight_data
 from apps.inventory.forms import (
     AdjustForm,
@@ -40,6 +41,8 @@ from apps.inventory.models import (
 )
 from apps.inventory.services import EntryDetails
 
+ENTRY_IDS = 'entry-%s'
+EXIT_IDS = 'exit-%s'
 PAGE_SIZE = 20
 MOVEMENT_PAGE_SIZE = 30
 RECENT_MOVEMENTS = 10
@@ -194,6 +197,14 @@ class BatchRow:
     transfer_form: TransferForm
 
 
+def _adjust_ids(batch: Batch) -> str:
+    return f'adjust-{batch.pk}-%s'
+
+
+def _transfer_ids(batch: Batch) -> str:
+    return f'transfer-{batch.pk}-%s'
+
+
 def _batch_rows(item: Item, forms: StockForms) -> list[BatchRow]:
     today = timezone.localdate()
     limit = _expiry_limit()
@@ -217,13 +228,18 @@ def _batch_rows(item: Item, forms: StockForms) -> list[BatchRow]:
                     forms.adjust
                     if has_errors and forms.adjust
                     else AdjustForm(
-                        initial={'new_quantity': _plain(batch.quantity)}
+                        auto_id=_adjust_ids(batch),
+                        initial={'new_quantity': _plain(batch.quantity)},
                     )
                 ),
                 transfer_form=(
                     forms.transfer
                     if has_errors and forms.transfer
-                    else TransferForm(batch=batch, initial=quantity)
+                    else TransferForm(
+                        batch=batch,
+                        auto_id=_transfer_ids(batch),
+                        initial=quantity,
+                    )
                 ),
             )
         )
@@ -242,8 +258,8 @@ def _stock_response(request, item, forms=None, status=HTTPStatus.OK):
         'low': total < item.min_stock,
         'rows': rows,
         'next_batch': next((r.batch for r in rows if not r.reserved), None),
-        'entry_form': forms.entry or EntryForm(),
-        'exit_form': forms.exit or ExitForm(item=item),
+        'entry_form': forms.entry or EntryForm(auto_id=ENTRY_IDS),
+        'exit_form': forms.exit or ExitForm(item=item, auto_id=EXIT_IDS),
         'movements': services.recent_movements(item, RECENT_MOVEMENTS),
     }
 
@@ -274,7 +290,7 @@ def _after_success(request, item, message):
 @require_POST
 def item_entry(request, pk):
     item = get_object_or_404(Item, pk=pk)
-    form = EntryForm(request.POST)
+    form = EntryForm(request.POST, auto_id=ENTRY_IDS)
 
     if not form.is_valid():
         return _stock_response(
@@ -303,7 +319,7 @@ def item_entry(request, pk):
 @require_POST
 def item_exit(request, pk):
     item = get_object_or_404(Item, pk=pk)
-    form = ExitForm(request.POST, item=item)
+    form = ExitForm(request.POST, item=item, auto_id=EXIT_IDS)
 
     if not form.is_valid():
         return _stock_response(
@@ -328,7 +344,7 @@ def item_exit(request, pk):
 @require_POST
 def batch_adjust(request, pk):
     batch = get_object_or_404(Batch.objects.select_related('item'), pk=pk)
-    form = AdjustForm(request.POST)
+    form = AdjustForm(request.POST, auto_id=_adjust_ids(batch))
 
     if not form.is_valid():
         return _stock_response(
@@ -351,7 +367,9 @@ def batch_transfer(request, pk):
     batch = get_object_or_404(
         Batch.objects.select_related('item', 'location'), pk=pk
     )
-    form = TransferForm(request.POST, batch=batch)
+    form = TransferForm(
+        request.POST, batch=batch, auto_id=_transfer_ids(batch)
+    )
 
     if not form.is_valid():
         return _stock_response(
@@ -497,18 +515,30 @@ def export_stock_csv(request):
     return response
 
 
-def shopping_list(request):
+def _shopping_context() -> dict:
     lines = services.shopping_list()
     priced = [line.estimate for line in lines if line.estimate is not None]
 
-    context = {
+    return {
         'lines': lines,
         'estimate': sum(priced, Decimal(0)),
         'unpriced': len(lines) - len(priced),
         'today': timezone.localdate(),
     }
 
-    return render(request, 'inventory/shopping_list.html', context)
+
+def shopping_list(request):
+    return render(request, 'inventory/shopping_list.html', _shopping_context())
+
+
+def shopping_pdf(request):
+    context = _shopping_context()
+    today = context['today']
+    data = reports.shopping_list_pdf(
+        context['lines'], context['estimate'], today
+    )
+
+    return pdf_response(data, f'shopping-list-{today.isoformat()}.pdf')
 
 
 INSIGHT_TABS = ('forecast', 'value', 'activity')
