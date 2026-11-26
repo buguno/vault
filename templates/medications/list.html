@@ -14,11 +14,11 @@
   <table class="w-full text-sm">
     <thead class="text-left text-stone-500 dark:text-stone-400">
       <tr>
-        <th class="px-4 py-2 font-medium">{% trans 'Medication' %}</th>
-        <th class="hidden px-4 py-2 font-medium md:table-cell">{% trans 'Active ingredient' %}</th>
-        <th class="hidden px-4 py-2 font-medium sm:table-cell">{% trans 'Form' %}</th>
-        <th class="px-4 py-2 text-right font-medium">{% trans 'Stock' %}</th>
-        <th class="px-4 py-2 font-medium">{% trans 'Next expiry' %}</th>
+        <th scope="col" class="px-4 py-2 font-medium">{% trans 'Medication' %}</th>
+        <th scope="col" class="hidden px-4 py-2 font-medium md:table-cell">{% trans 'Active ingredient' %}</th>
+        <th scope="col" class="hidden px-4 py-2 font-medium sm:table-cell">{% trans 'Form' %}</th>
+        <th scope="col" class="px-4 py-2 text-right font-medium">{% trans 'Stock' %}</th>
+        <th scope="col" class="px-4 py-2 font-medium">{% trans 'Next expiry' %}</th>
       </tr>
     </thead>
     <tbody class="divide-y divide-stone-100 dark:divide-white/5">
@@ -31,7 +31,7 @@
         <td class="hidden px-4 py-3 md:table-cell">{{ item.medication.active_ingredient }}</td>
         <td class="hidden px-4 py-3 text-stone-500 sm:table-cell dark:text-stone-400">{{ item.medication.get_form_display }}</td>
         <td class="px-4 py-3 text-right tabular-nums {% if item.total < item.min_stock %}font-semibold text-red-700 dark:text-red-400{% endif %}">{{ item.total|floatformat:"-3" }} {{ item.unit_symbol }}</td>
-        <td class="px-4 py-3">{% if item.next_expiry %}{{ item.next_expiry|date:'SHORT_DATE_FORMAT' }}{% else %}<span class="text-stone-400">—</span>{% endif %}</td>
+        <td class="px-4 py-3">{% if item.next_expiry %}{{ item.next_expiry|date:'SHORT_DATE_FORMAT' }}{% else %}<span class="text-stone-500">—</span>{% endif %}</td>
       </tr>
       {% empty %}
       <tr><td colspan="5" class="px-4 py-8 text-center text-stone-500 dark:text-stone-400">{% trans 'No medications yet.' %}</td></tr>
