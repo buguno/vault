@@ -224,7 +224,9 @@ Install the plugin once: `pipx inject poetry "poethepoet[poetry_plugin]"` (quote
 
 Dev database: `docker compose up -d --wait` (`compose.yaml`, Postgres only). Download the Tailwind
 standalone binary for your OS from the tailwindlabs/tailwindcss releases into `bin/tailwindcss`.
-Rebuild and commit the CSS whenever template classes change.
+Rebuild and commit the CSS whenever template classes change. Tailwind scans only `templates/` and `apps/` (`source(none)` +
+explicit `@source` lines in `tailwind/input.css`): without that it also scans notes and local tools, so the CSS built on
+a machine differs from CI's and `css-check` fails. Classes used anywhere else need their folder added as an `@source`.
 
 To run it (any machine, Pi included): `poetry install --only main`. If Poetry is too heavy there, export
 requirements (`poetry-plugin-export`) and install with pip.
