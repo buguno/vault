@@ -25,11 +25,44 @@ class StyledFormMixin(forms.BaseForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for field in self.fields.values():
+        for name, field in self.fields.items():
             if isinstance(field.widget, forms.CheckboxInput):
                 field.widget.attrs.setdefault('class', 'checkbox')
             else:
                 field.widget.attrs.setdefault('class', 'input')
+
+            self._describe(name)
+
+    def full_clean(self):
+        super().full_clean()
+
+        for name in self.fields:
+            self._describe(name)
+
+    def _describe(self, name: str) -> None:
+        """Point a field at its help text and error message (`aria-*`).
+
+        The templates render them with the ids `<field id>-help` and
+        `<field id>-error`.
+        """
+        field = self.fields[name]
+        field_id = self[name].id_for_label
+        attrs = field.widget.attrs
+        described = []
+
+        if field.help_text:
+            described.append(f'{field_id}-help')
+
+        if self._errors and name in self._errors:
+            described.append(f'{field_id}-error')
+            attrs['aria-invalid'] = 'true'
+        else:
+            attrs.pop('aria-invalid', None)
+
+        if described:
+            attrs['aria-describedby'] = ' '.join(described)
+        else:
+            attrs.pop('aria-describedby', None)
 
 
 class LoginForm(StyledFormMixin, AuthenticationForm):
