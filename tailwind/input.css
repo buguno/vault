@@ -13,12 +13,37 @@
   --color-stone-200: #dbe3de;
   --color-stone-300: #bcc9c1;
   --color-stone-400: #8c9d93;
-  --color-stone-500: #66786d;
+  --color-stone-500: #5a6a60;
   --color-stone-600: #4f5f55;
   --color-stone-700: #3a473f;
   --color-stone-800: #26312b;
   --color-stone-900: #17201b;
   --color-stone-950: #0b110e;
+}
+
+@layer base {
+  html {
+    /* Keep the focused control clear of the sticky top bar. */
+    scroll-padding-top: 6rem;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-emerald-600);
+    outline-offset: 2px;
+  }
+  .dark :focus-visible {
+    outline-color: var(--color-emerald-400);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 .app-bg {
@@ -56,37 +81,27 @@ html[data-readonly] [data-write] {
   );
 }
 
-@media print {
-  .app-bg,
-  .dark .app-bg {
-    background: #fff !important;
-  }
-  .card {
-    background: #fff !important;
-    border-color: #cbd5d0 !important;
-    box-shadow: none !important;
-    backdrop-filter: none !important;
-  }
-}
-
 @layer components {
   .card {
     @apply rounded-2xl border border-stone-200/80 bg-white/85 shadow-sm backdrop-blur-sm dark:border-white/10 dark:bg-white/[0.045] dark:shadow-none;
   }
   .input {
-    @apply block w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-stone-900 placeholder-stone-400 focus:border-emerald-600 focus:outline-2 focus:outline-emerald-600 disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/10 dark:bg-black/30 dark:text-stone-100;
+    @apply block min-h-11 w-full rounded-lg border border-stone-300 sm:min-h-0 bg-white px-3 py-2 text-stone-900 placeholder-stone-500 focus:border-emerald-600 focus:outline-2 focus:outline-emerald-600 disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/10 dark:bg-black/30 dark:text-stone-100;
+  }
+  .skip-link {
+    @apply fixed left-3 top-3 z-50 -translate-y-24 rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-medium text-white shadow-lg focus:translate-y-0;
   }
   .checkbox {
     @apply size-4 rounded border-stone-300 accent-emerald-600 dark:border-stone-700;
   }
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3.5 py-2 text-sm font-medium text-white shadow-sm shadow-emerald-900/20 hover:bg-emerald-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600;
+    @apply inline-flex min-h-11 sm:min-h-0 items-center justify-center gap-1.5 rounded-lg bg-emerald-700 px-3.5 py-2 text-sm font-medium text-white shadow-sm shadow-emerald-900/20 hover:bg-emerald-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600;
   }
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-1.5 rounded-lg border border-stone-300 bg-white/80 px-3.5 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:border-white/10 dark:bg-white/5 dark:text-stone-200 dark:hover:bg-white/10;
+    @apply inline-flex min-h-11 sm:min-h-0 items-center justify-center gap-1.5 rounded-lg border border-stone-300 bg-white/80 px-3.5 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:border-white/10 dark:bg-white/5 dark:text-stone-200 dark:hover:bg-white/10;
   }
   .btn-danger {
-    @apply inline-flex items-center justify-center gap-1.5 rounded-lg border border-red-300 bg-white/80 px-3.5 py-2 text-sm font-medium text-red-700 hover:bg-red-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 dark:border-red-900 dark:bg-white/5 dark:text-red-400 dark:hover:bg-red-950;
+    @apply inline-flex min-h-11 sm:min-h-0 items-center justify-center gap-1.5 rounded-lg border border-red-300 bg-white/80 px-3.5 py-2 text-sm font-medium text-red-700 hover:bg-red-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 dark:border-red-900 dark:bg-white/5 dark:text-red-400 dark:hover:bg-red-950;
   }
   .modal {
     @apply m-auto w-[calc(100%-2rem)] max-w-md rounded-2xl border border-stone-200 bg-white p-0 text-stone-900 shadow-xl backdrop:bg-black/50 dark:border-white/10 dark:bg-stone-900 dark:text-stone-100;
@@ -113,10 +128,10 @@ html[data-readonly] [data-write] {
     @apply mt-1 text-3xl font-semibold tracking-tight tabular-nums;
   }
   .tab {
-    @apply rounded-lg px-3.5 py-1.5 text-sm font-medium text-stone-600 hover:bg-stone-200/60 dark:text-stone-300 dark:hover:bg-white/10;
+    @apply inline-flex min-h-11 items-center rounded-lg px-3.5 py-1.5 text-sm font-medium text-stone-600 sm:min-h-0 hover:bg-stone-200/60 dark:text-stone-300 dark:hover:bg-white/10;
   }
   .tab-active {
-    @apply bg-emerald-600 text-white hover:bg-emerald-600 dark:bg-emerald-600 dark:text-white dark:hover:bg-emerald-600;
+    @apply bg-emerald-700 text-white hover:bg-emerald-700 dark:bg-emerald-700 dark:text-white dark:hover:bg-emerald-700;
   }
   .track {
     @apply h-2 overflow-hidden rounded-full bg-stone-200/80 dark:bg-white/10;
