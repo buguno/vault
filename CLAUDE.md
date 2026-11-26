@@ -313,7 +313,8 @@ Tailwind) live in the `env:` block of `tests.yaml`. No GitHub `secrets` are used
 only credential is the built-in `GITHUB_TOKEN`; add real secrets only to a protected Environment. `master` is protected by a ruleset ("master protection", no bypass): no deletion, no force push, merge only through a PR
 whose check `tests / 🧪 Lint and tests` passed. That name is `<caller job id> / <job name>` (`tests` in
 `pull-request.yaml` + the job name in `tests.yaml`): rename either and the ruleset must follow. `release.yaml` dispatches
-`pull-request.yaml` on the release branch, because PRs opened with `GITHUB_TOKEN` get no `pull_request` runs. Never push to
+`pull-request.yaml` on the release branch, because PRs opened with `GITHUB_TOKEN` get no `pull_request` runs. Merged PR branches are deleted
+automatically (repo setting `delete_branch_on_merge`). Never push to
 `master` directly. Keep `DOCKER.md` (the
 registry-style page) in sync with the Dockerfile and the env vars. Use plain literal env values for CI (never production
 credentials). `DATABASE_URL` only needs to be a syntactically valid URL there, since Testcontainers provides the real database.
