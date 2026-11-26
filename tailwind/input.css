@@ -1,4 +1,7 @@
-@import 'tailwindcss';
+/* No automatic source detection: only the templates and the Python code are
+   scanned, so the built CSS is the same on every machine and in CI, whatever
+   other files (notes, local tools) happen to be in the folder. */
+@import 'tailwindcss' source(none);
 
 @source '../templates';
 @source '../apps';
