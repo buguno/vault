@@ -23,10 +23,10 @@
   <table class="w-full text-sm">
     <thead class="text-left text-stone-500 dark:text-stone-400">
       <tr>
-        <th class="px-4 py-2 font-medium">{% trans 'Item' %}</th>
-        <th class="px-4 py-2 text-right font-medium">{% trans 'In stock' %}</th>
-        <th class="hidden px-4 py-2 text-right font-medium sm:table-cell">{% trans 'Use per day' %}</th>
-        <th class="px-4 py-2 text-right font-medium">{% trans 'Lasts' %}</th>
+        <th scope="col" class="px-4 py-2 font-medium">{% trans 'Item' %}</th>
+        <th scope="col" class="px-4 py-2 text-right font-medium">{% trans 'In stock' %}</th>
+        <th scope="col" class="hidden px-4 py-2 text-right font-medium sm:table-cell">{% trans 'Use per day' %}</th>
+        <th scope="col" class="px-4 py-2 text-right font-medium">{% trans 'Lasts' %}</th>
       </tr>
     </thead>
     <tbody class="divide-y divide-stone-100 dark:divide-white/5">
@@ -74,7 +74,7 @@
     {% for category in value.categories %}
     <li class="grid grid-cols-[minmax(0,9rem)_1fr_auto] items-center gap-4 px-4 py-3 text-sm sm:grid-cols-[minmax(0,12rem)_1fr_auto]">
       <span class="truncate font-medium">{{ category.name }}</span>
-      <div class="track"><div class="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400" style="width: {{ category.percent }}%"></div></div>
+      <div aria-hidden="true" class="track"><div class="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400" style="width: {{ category.percent }}%"></div></div>
       <span class="text-right font-medium tabular-nums">{{ category.value|money }}</span>
     </li>
     {% endfor %}
@@ -91,8 +91,8 @@
     <p class="text-sm text-stone-500 dark:text-stone-400">{% blocktrans %}Last {{ recent_days }} days{% endblocktrans %}</p>
     {% if mix.total %}
     <div class="mt-4 flex items-center gap-5">
-      <div class="relative size-32 shrink-0">
-        <div class="ring size-full" style="background: {{ mix.gradient }}; --ring-width: 14px"></div>
+      <div class="relative size-32 shrink-0" aria-hidden="true">
+        <div aria-hidden="true" class="ring size-full" style="background: {{ mix.gradient }}; --ring-width: 14px"></div>
         <div class="absolute inset-0 grid place-items-center text-center"><span><span class="block text-2xl font-semibold tabular-nums">{{ mix.total }}</span><span class="block text-xs text-stone-500 dark:text-stone-400">{% trans 'total' %}</span></span></div>
       </div>
       <ul class="min-w-0 flex-1 space-y-1.5 text-sm">
@@ -112,7 +112,7 @@
     {% for row in users %}
     <div class="mt-4 first:mt-4">
       <div class="flex justify-between text-sm"><span class="font-medium">{{ row.label }}</span><span class="tabular-nums text-stone-500 dark:text-stone-400">{{ row.count }}</span></div>
-      <div class="track mt-1.5"><div class="h-full rounded-full bg-emerald-500" style="width: {{ row.percent }}%"></div></div>
+      <div aria-hidden="true" class="track mt-1.5"><div class="h-full rounded-full bg-emerald-500" style="width: {{ row.percent }}%"></div></div>
     </div>
     {% empty %}
     <p class="py-10 text-center text-sm text-stone-500 dark:text-stone-400">{% trans 'No movements in this period.' %}</p>
@@ -125,7 +125,7 @@
     {% for row in used %}
     <div class="mt-4 first:mt-4">
       <div class="flex justify-between gap-3 text-sm"><span class="truncate font-medium">{{ row.label }}</span><span class="shrink-0 tabular-nums text-stone-500 dark:text-stone-400">{{ row.count }}</span></div>
-      <div class="track mt-1.5"><div class="h-full rounded-full bg-amber-500" style="width: {{ row.percent }}%"></div></div>
+      <div aria-hidden="true" class="track mt-1.5"><div class="h-full rounded-full bg-amber-500" style="width: {{ row.percent }}%"></div></div>
     </div>
     {% empty %}
     <p class="py-10 text-center text-sm text-stone-500 dark:text-stone-400">{% trans 'No exits in this period.' %}</p>
@@ -142,8 +142,8 @@
     {% if activity.busiest_day %}<p class="text-sm text-stone-500 dark:text-stone-400">{% blocktrans with day=activity.busiest_day|date:'SHORT_DATE_FORMAT' count=activity.busiest_count %}Busiest day: {{ day }} ({{ count }}){% endblocktrans %}</p>{% endif %}
   </div>
   <div class="mt-4 overflow-x-auto pb-1">
-    <div class="flex w-max gap-1">
-      <div class="grid gap-1 pr-1 text-xs text-stone-400 dark:text-stone-500" aria-hidden="true">
+    <div class="flex w-max gap-1" aria-hidden="true">
+      <div class="grid gap-1 pr-1 text-xs text-stone-500 dark:text-stone-400" aria-hidden="true">
         {% for cell in activity.weeks.0 %}<span class="h-6 leading-6 sm:h-7 sm:leading-7">{% if forloop.counter0|divisibleby:2 %}{{ cell.day|date:'D' }}{% endif %}</span>{% endfor %}
       </div>
       {% for week in activity.weeks %}
