@@ -35,11 +35,11 @@
   <table class="w-full text-sm">
     <thead class="text-left text-stone-500 dark:text-stone-400">
       <tr>
-        <th class="px-4 py-2 font-medium">{% trans 'Ammunition' %}</th>
-        <th class="px-4 py-2 font-medium">{% trans 'Caliber' %}</th>
-        <th class="hidden px-4 py-2 text-right font-medium md:table-cell">{% trans 'Bullet weight' %}</th>
-        <th class="hidden px-4 py-2 font-medium md:table-cell">{% trans 'Manufacturer' %}</th>
-        <th class="px-4 py-2 text-right font-medium">{% trans 'Rounds' %}</th>
+        <th scope="col" class="px-4 py-2 font-medium">{% trans 'Ammunition' %}</th>
+        <th scope="col" class="px-4 py-2 font-medium">{% trans 'Caliber' %}</th>
+        <th scope="col" class="hidden px-4 py-2 text-right font-medium md:table-cell">{% trans 'Bullet weight' %}</th>
+        <th scope="col" class="hidden px-4 py-2 font-medium md:table-cell">{% trans 'Manufacturer' %}</th>
+        <th scope="col" class="px-4 py-2 text-right font-medium">{% trans 'Rounds' %}</th>
       </tr>
     </thead>
     <tbody class="divide-y divide-stone-100 dark:divide-white/5">
@@ -50,7 +50,7 @@
           {% if item.ammunition.bullet_type %}<p class="text-stone-500 dark:text-stone-400">{{ item.ammunition.bullet_type }}</p>{% endif %}
         </td>
         <td class="px-4 py-3">{{ item.ammunition.caliber }}</td>
-        <td class="hidden px-4 py-3 text-right tabular-nums md:table-cell">{% if item.ammunition.bullet_weight %}{{ item.ammunition.bullet_weight|floatformat:"-1" }} gr{% else %}<span class="text-stone-400">—</span>{% endif %}</td>
+        <td class="hidden px-4 py-3 text-right tabular-nums md:table-cell">{% if item.ammunition.bullet_weight %}{{ item.ammunition.bullet_weight|floatformat:"-1" }} gr{% else %}<span class="text-stone-500">—</span>{% endif %}</td>
         <td class="hidden px-4 py-3 text-stone-500 md:table-cell dark:text-stone-400">{{ item.ammunition.manufacturer|default:"—" }}</td>
         <td class="px-4 py-3 text-right tabular-nums">
           {{ item.total|floatformat:"-3" }}
