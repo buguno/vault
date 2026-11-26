@@ -1,0 +1,122 @@
+name: Publish
+
+# What reaches master (and every version tag) is tested again and, only if the
+# tests pass, built for amd64 and arm64 and published to ghcr.io.
+#
+# Publishing is switched by the repository variable PUBLISH_IMAGE (Settings,
+# Secrets and variables, Actions, Variables). Without it, for example on a fork,
+# the image is still built and smoke-tested, but nothing is pushed.
+on:
+  push:
+    branches: [master]
+    tags: ['v*']
+  workflow_dispatch:
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false # never stop a publish half way
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    uses: ./.github/workflows/tests.yaml
+
+  image:
+    name: 🐳 Container image
+    needs: tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    permissions:
+      contents: read
+      packages: write
+
+    env:
+      PUBLISH: ${{ vars.PUBLISH_IMAGE == 'true' }}
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v5
+
+      - name: 🧬 Set up QEMU (for the arm64 build)
+        uses: docker/setup-qemu-action@v3
+
+      - name: 🏗️ Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🔨 Build the image (amd64) for the smoke test
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64
+          load: true
+          push: false
+          tags: vault:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: 🔎 Smoke test the image
+        run: |
+          set -eu
+          env_args="-e SECRET_KEY=ci-only -e ALLOWED_HOSTS=localhost -e DATABASE_URL=postgres://u:p@localhost/x"
+
+          echo "runs as the unprivileged user:"
+          test "$(docker run --rm vault:ci id -u)" = "10001"
+
+          echo "the code is read-only for the app user:"
+          if docker run --rm vault:ci sh -c 'touch /app/probe'; then
+            echo "the app user can write to /app" >&2
+            exit 1
+          fi
+
+          echo "starts with a read-only filesystem and any uid:"
+          docker run --rm --read-only --tmpfs /tmp --user 4242:4242 $env_args vault:ci python manage.py check
+
+          echo "encrypted backups work (gnupg) with a read-only filesystem:"
+          docker run --rm --read-only --tmpfs /tmp $env_args vault:ci python -c "
+          import django, os
+          os.environ['DJANGO_SETTINGS_MODULE'] = 'config.settings'
+          django.setup()
+          from apps.core import backup
+          assert backup.decrypt(backup.encrypt(b'ok', 'a-long-passphrase-1'), 'a-long-passphrase-1') == b'ok'"
+
+      - name: 🔑 Log in to GitHub Container Registry
+        if: env.PUBLISH == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🏷️ Work out the image tags and labels
+        id: meta
+        if: env.PUBLISH == 'true'
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=edge,branch=master
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha
+          labels: |
+            org.opencontainers.image.documentation=${{ github.server_url }}/${{ github.repository }}/blob/master/DOCKER.md
+
+      - name: 🚀 Build and push (amd64 and arm64)
+        if: env.PUBLISH == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          provenance: false
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: ⏭️ Say why nothing was published
+        if: env.PUBLISH != 'true'
+        run: echo "::notice title=Image not published::Set the repository variable PUBLISH_IMAGE to true to publish it."
