@@ -261,7 +261,8 @@ requirements (`poetry-plugin-export`) and install with pip.
   `_id` attributes (`total: Decimal`, `item_id: int`); `class Meta(TimestampedModel.Meta)`; form fields are retyped with
   `core.forms.field_of(form, name, FieldClass)` instead of mutating `form.fields[...]`; no attributes monkey-patched onto
   model instances (use dataclass rows, template filters or `{% widthratio %}`).
-- **UI/UX and accessibility** (checked against the `ui-ux-pro-max` skill in `.claude/skills/`):
+- **UI/UX and accessibility** (found with the `ui-ux-pro-max` skill, which is optional and local: `.claude/skills/` is
+  not versioned, and everything it taught is written down here and covered by `tests/core/test_accessibility.py`):
   - Text contrast >= 4.5:1 in both themes. Muted text is `text-stone-500 dark:text-stone-400` (`stone-500` is darkened in
     `tailwind/input.css` for this); never `text-stone-400` alone in light mode or `dark:text-stone-500`. Filled buttons
     use `bg-emerald-700` (white on `emerald-600` is only 3.8:1).
