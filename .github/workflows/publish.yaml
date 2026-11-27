@@ -47,7 +47,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: 🔨 Build the image (amd64) for the smoke test
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           platforms: linux/amd64
@@ -106,7 +106,7 @@ jobs:
 
       - name: 🚀 Build and push (amd64 and arm64)
         if: env.PUBLISH == 'true'
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           platforms: linux/amd64,linux/arm64
